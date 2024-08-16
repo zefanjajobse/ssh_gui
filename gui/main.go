@@ -26,7 +26,7 @@ func FillTable(table *tview.Table, hosts []host_info) {
 		// fill all other rows with the .ssh/config file info
 		v := reflect.ValueOf(host)
 		for i := 0; i < v.NumField(); i++ {
-			table.SetCell(iter + 1, i, &tview.TableCell{ Text: v.Field(i).String(), Color: tcell.ColorWhite, Align: tview.AlignLeft, Expansion: 1})
+			table.SetCell(iter + 1, i, &tview.TableCell{ Text: v.Field(i).String(), Color: tcell.ColorWhite, Align: tview.AlignLeft, Expansion: 1, SelectedStyle: tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorWhite)})
 		}
 	}
 
@@ -61,7 +61,8 @@ func Start(a *tview.Application) {
 		}
 		FillTable(table, filteredHosts)
 	})
-	input.SetPlaceholder("Search by name...")
+	input = input.SetPlaceholder("Search by name...").SetFieldBackgroundColor(tcell.ColorGray)
+	input.SetPlaceholderStyle(input.GetFieldStyle()).SetPlaceholderTextColor(tcell.ColorLightGray)
 
 	// On other keyboard input
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
