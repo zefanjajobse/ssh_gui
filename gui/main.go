@@ -10,7 +10,6 @@ import (
 	"github.com/rivo/tview"
 )
 
-var exited bool
 var app *tview.Application
 
 func Start(a *tview.Application) {
