@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/kevinburke/ssh_config"
 )
@@ -45,5 +46,9 @@ func getHosts() ([]host_info) {
 		}
 	}
 
+	sort.Slice(hosts, func(i, j int) bool {
+		return hosts[i].Name < hosts[j].Name
+	})
+	  
 	return hosts
 }
