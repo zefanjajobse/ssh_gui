@@ -2,6 +2,7 @@ package gui
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"reflect"
@@ -78,7 +79,7 @@ func Start(a *tview.Application) {
 			case tcell.KeyEnter:
 				app.Suspend(func() {
 					// row - 1 since the first row is used for column names
-					connect(hosts[selected_row - 1].HostName)
+					connect(hosts[selected_row - 1])
 				})
 			}
 		return event
@@ -92,11 +93,18 @@ func Start(a *tview.Application) {
 	}
 }
 
-func connect(hostname string) {
-	fmt.Println("» ssh", hostname)
+func connect(host host_info) {
+	if host.HostName == "" {
+		log.Fatal("Can't connect to specified host, There is no hostname set for ", host.Name)
+	}
 
+	command := host.HostName
+	if host.User != "" {
+		command = fmt.Sprintf("%s@%s", host.User, host.HostName)
+	}
+	fmt.Println("» ssh", command)
 	// start ssh session
-	cmd := exec.Command("ssh", hostname)
+	cmd := exec.Command("ssh", command)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Run()
