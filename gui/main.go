@@ -20,14 +20,14 @@ func FillTable(table *tview.Table, hosts []host_info) {
 	v := reflect.ValueOf(host_info{})
 	for i := 0; i < v.NumField(); i++ {
 		// fill the first row with information for the columns
-		table.SetCell(0, i, &tview.TableCell{ Text: v.Type().Field(i).Name, Color: tcell.ColorYellow, Align: tview.AlignLeft, NotSelectable: true, Expansion: 1})
+		table.SetCell(0, i, &tview.TableCell{ Text: v.Type().Field(i).Name, Color: tcell.ColorYellow, Align: tview.AlignLeft, NotSelectable: true, Expansion: 1, BackgroundColor: tcell.ColorBlack })
 	}
 
 	for iter, host := range hosts {
 		// fill all other rows with the .ssh/config file info
 		v := reflect.ValueOf(host)
 		for i := 0; i < v.NumField(); i++ {
-			table.SetCell(iter + 1, i, &tview.TableCell{ Text: v.Field(i).String(), Color: tcell.ColorWhite, Align: tview.AlignLeft, Expansion: 1, SelectedStyle: tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorWhite)})
+			table.SetCell(iter + 1, i, &tview.TableCell{ Text: v.Field(i).String(), Color: tcell.ColorWhite, Align: tview.AlignLeft, Expansion: 1, SelectedStyle: tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorWhite), BackgroundColor: tcell.ColorBlack })
 		}
 	}
 
