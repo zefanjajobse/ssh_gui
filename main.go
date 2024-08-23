@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	app := tview.NewApplication()
+	app := tview.NewApplication().EnableMouse(true)
 
 	gui.Start(app)
 

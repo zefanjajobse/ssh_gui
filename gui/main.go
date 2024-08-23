@@ -41,6 +41,16 @@ func FillTable(table *tview.Table, hosts []host_info, colors theme) {
 			current := *cell
 			current.Text = v.Field(i).String()
 			current.Color = colors.cell
+			current.Clicked = func() bool {
+				selected_row, _ := table.GetSelection()
+				// row - 1 since the first row is used for column names
+				if iter == selected_row - 1 {
+					app.Suspend(func() {
+						connect(hosts[iter])
+					})
+				}
+				return false
+			}
 			table.SetCell(iter + 1, i, &current)
 		}
 	}
@@ -101,7 +111,20 @@ func Start(a *tview.Application) {
 					connect(hosts[selected_row - 1])
 				})
 			}
+		app.SetFocus(input)
 		return event
+	})
+	app.SetMouseCapture(func(event *tcell.EventMouse, action tview.MouseAction) (*tcell.EventMouse, tview.MouseAction) {
+		selected_row, _ := table.GetSelection()
+		length := table.GetRowCount()
+		switch action {
+			case tview.MouseScrollDown:
+				table.Select((selected_row + 1 + length) % length, 0)
+			case tview.MouseScrollUp:
+				table.Select((selected_row - 1 + length) % length, 0)
+		}
+		app.SetFocus(input)
+		return event, action
 	})
 	
 	flex := tview.NewFlex().SetDirection(tview.FlexRow).
