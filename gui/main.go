@@ -14,20 +14,34 @@ import (
 
 var app *tview.Application
 
-func FillTable(table *tview.Table, hosts []host_info) {
+func FillTable(table *tview.Table, hosts []host_info, colors theme) {
 	table.Clear()
+
+	cell := &tview.TableCell{ 
+		Align: tview.AlignLeft,
+		Expansion: 1,
+		SelectedStyle: tcell.StyleDefault.Foreground(colors.selected_cell).Background(colors.selected_cell_bg),
+		BackgroundColor: colors.cell_bg,
+	}
 
 	v := reflect.ValueOf(host_info{})
 	for i := 0; i < v.NumField(); i++ {
+		current := *cell
+		current.Text = v.Type().Field(i).Name
+		current.Color = colors.header
+		current.NotSelectable = true
 		// fill the first row with information for the columns
-		table.SetCell(0, i, &tview.TableCell{ Text: v.Type().Field(i).Name, Color: tcell.ColorYellow, Align: tview.AlignLeft, NotSelectable: true, Expansion: 1, BackgroundColor: tcell.ColorBlack })
+		table.SetCell(0, i, &current)
 	}
 
 	for iter, host := range hosts {
 		// fill all other rows with the .ssh/config file info
 		v := reflect.ValueOf(host)
 		for i := 0; i < v.NumField(); i++ {
-			table.SetCell(iter + 1, i, &tview.TableCell{ Text: v.Field(i).String(), Color: tcell.ColorWhite, Align: tview.AlignLeft, Expansion: 1, SelectedStyle: tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorWhite), BackgroundColor: tcell.ColorBlack })
+			current := *cell
+			current.Text = v.Field(i).String()
+			current.Color = colors.cell
+			table.SetCell(iter + 1, i, &current)
 		}
 	}
 
@@ -40,17 +54,22 @@ func FillTable(table *tview.Table, hosts []host_info) {
 
 	// if only the information bar or less is visible, show info message
 	if length <= 1 {
-		table.SetCell(1, 0, &tview.TableCell{ Text: "No results", Color: tcell.ColorRed, Align: tview.AlignLeft, NotSelectable: true, Expansion: 1})
+		current := *cell
+		current.Text = "No results"
+		current.Color = tcell.ColorRed
+		current.NotSelectable = true
+		table.SetCell(1, 0, &current)
 	}
 }
 
 func Start(a *tview.Application) {
 	app = a
+	colors := GetColorTheme()
 
 	table := tview.NewTable().SetFixed(1, 1).SetSelectable(true, false)
-
+	table.SetBackgroundColor(colors.app_bg)
 	hosts := getHosts()
-	FillTable(table, hosts)
+	FillTable(table, hosts, colors)
 	
 	input := tview.NewInputField().SetChangedFunc(func(text string) {
 		// On input field changed
@@ -60,10 +79,10 @@ func Start(a *tview.Application) {
 				filteredHosts = append(filteredHosts, host)
 			}
 		}
-		FillTable(table, filteredHosts)
+		FillTable(table, filteredHosts, colors)
 	})
-	input = input.SetPlaceholder("Search by name...").SetFieldBackgroundColor(tcell.ColorGray)
-	input.SetPlaceholderStyle(input.GetFieldStyle()).SetPlaceholderTextColor(tcell.ColorLightGray)
+	input = input.SetPlaceholder("Search by name...").SetFieldBackgroundColor(colors.input_bg)
+	input.SetPlaceholderStyle(input.GetFieldStyle()).SetPlaceholderTextColor(colors.input_placeholder).SetFieldTextColor(colors.input)
 
 	// On other keyboard input
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
