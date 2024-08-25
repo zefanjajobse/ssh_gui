@@ -13,6 +13,7 @@ type host_info struct {
 	Name string
 	HostName string
 	User string
+	Port string `default:"22"`
 }
 
 var hosts = []host_info{}
@@ -42,7 +43,11 @@ func getHosts() ([]host_info) {
 			// this info is only used to show in the gui
 			hostname, _ := cfg.Get(name, "HostName")
 			user, _ := cfg.Get(name, "User")
-			hosts = append(hosts, host_info{Name: name, HostName: hostname, User: user})
+			port, _ := cfg.Get(name, "Port")
+			if port == "" {
+				port = "22"
+			}
+			hosts = append(hosts, host_info{Name: name, HostName: hostname, User: user, Port: port})
 		}
 	}
 

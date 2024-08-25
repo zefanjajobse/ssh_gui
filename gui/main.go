@@ -80,10 +80,11 @@ func Start(a *tview.Application) {
 	table.SetBackgroundColor(colors.app_bg)
 	hosts := getHosts()
 	FillTable(table, hosts, colors)
+	filteredHosts := hosts;
 	
 	input := tview.NewInputField().SetChangedFunc(func(text string) {
 		// On input field changed
-		filteredHosts := []host_info{};
+		filteredHosts = []host_info{};
 		for _, host := range hosts {
 			if strings.Contains(host.Name, text) {
 				filteredHosts = append(filteredHosts, host)
@@ -108,7 +109,7 @@ func Start(a *tview.Application) {
 			case tcell.KeyEnter:
 				app.Suspend(func() {
 					// row - 1 since the first row is used for column names
-					connect(hosts[selected_row - 1])
+					connect(filteredHosts[selected_row - 1])
 				})
 			}
 		app.SetFocus(input)
@@ -140,14 +141,17 @@ func connect(host host_info) {
 		log.Fatal("Can't connect to specified host, There is no hostname set for ", host.Name)
 	}
 
-	command := host.HostName
+	cmd := exec.Command("ssh", host.HostName)
 	if host.User != "" {
-		command = fmt.Sprintf("%s@%s", host.User, host.HostName)
+		cmd = exec.Command("ssh", fmt.Sprintf("%s@%s", host.User, host.HostName))
 	}
-	fmt.Println("» ssh", command)
+	if host.Port != "22" {
+		cmd.Args = append(cmd.Args, "-p", host.Port)
+	}
+	fmt.Println("» ssh", strings.Join(cmd.Args, " "))
 	// start ssh session
-	cmd := exec.Command("ssh", command)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	cmd.Run()
 }
