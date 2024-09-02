@@ -45,6 +45,11 @@ func FillTable(table *tview.Table, hosts []host_info, colors theme) {
 				selected_row, _ := table.GetSelection()
 				// row - 1 since the first row is used for column names
 				if iter == selected_row - 1 {
+					if hosts[iter].Name == "Exit/Quit" {
+						app.Stop()
+						return false
+					}
+
 					app.Suspend(func() {
 						connect(hosts[iter])
 					})
@@ -79,6 +84,8 @@ func Start(a *tview.Application) {
 	table := tview.NewTable().SetFixed(1, 1).SetSelectable(true, false)
 	table.SetBackgroundColor(colors.app_bg)
 	hosts := getHosts()
+	// Add extra option to exit/quit the app
+	hosts = append(hosts, host_info{Name: "Exit/Quit"})
 	FillTable(table, hosts, colors)
 	filteredHosts := hosts;
 	
@@ -86,11 +93,13 @@ func Start(a *tview.Application) {
 		// On input field changed
 		filteredHosts = []host_info{};
 		for _, host := range hosts {
-			if strings.Contains(host.Name, text) {
+			if strings.Contains(strings.ToLower(host.Name), strings.ToLower(text)) {
 				filteredHosts = append(filteredHosts, host)
 			}
 		}
 		FillTable(table, filteredHosts, colors)
+		// Select the first row after input field change
+		table.Select(0, 0)
 	})
 	input = input.SetPlaceholder("Search by name...").SetFieldBackgroundColor(colors.input_bg)
 	input.SetPlaceholderStyle(input.GetFieldStyle()).SetPlaceholderTextColor(colors.input_placeholder).SetFieldTextColor(colors.input)
@@ -107,7 +116,16 @@ func Start(a *tview.Application) {
 				table.Select((selected_row - 1 + length) % length, 0)
 				return nil;
 			case tcell.KeyEnter:
+				// Skip if no row is selected
+				if selected_row > len(filteredHosts) || selected_row < len(filteredHosts) {
+					return nil;
+				}
 				app.Suspend(func() {
+					// Exit is a extra row after the list of hosts
+					if filteredHosts[selected_row - 1].Name == "Exit/Quit" {
+						app.Stop()
+						return;
+					}
 					// row - 1 since the first row is used for column names
 					connect(filteredHosts[selected_row - 1])
 				})
