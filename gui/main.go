@@ -117,7 +117,7 @@ func Start(a *tview.Application) {
 				return nil;
 			case tcell.KeyEnter:
 				// Skip if no row is selected
-				if selected_row > len(filteredHosts) || selected_row < len(filteredHosts) {
+				if selected_row > len(filteredHosts) || selected_row < 0 {
 					return nil;
 				}
 				app.Suspend(func() {
