@@ -10,15 +10,15 @@ import (
 )
 
 type host_info struct {
-	Name string
+	Name     string
 	HostName string
-	User string
-	Port string `default:"22"`
+	User     string
+	Port     string `default:"22"`
 }
 
 var hosts = []host_info{}
 
-func getHosts() ([]host_info) {
+func getHosts() []host_info {
 
 	f, err := os.Open(filepath.Join(os.Getenv("HOME"), ".ssh", "config"))
 
@@ -54,6 +54,6 @@ func getHosts() ([]host_info) {
 	sort.Slice(hosts, func(i, j int) bool {
 		return hosts[i].Name < hosts[j].Name
 	})
-	  
+
 	return hosts
 }

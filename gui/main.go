@@ -17,10 +17,10 @@ var app *tview.Application
 func FillTable(table *tview.Table, hosts []host_info, colors theme) {
 	table.Clear()
 
-	cell := &tview.TableCell{ 
-		Align: tview.AlignLeft,
-		Expansion: 1,
-		SelectedStyle: tcell.StyleDefault.Foreground(colors.selected_cell).Background(colors.selected_cell_bg),
+	cell := &tview.TableCell{
+		Align:           tview.AlignLeft,
+		Expansion:       1,
+		SelectedStyle:   tcell.StyleDefault.Foreground(colors.selected_cell).Background(colors.selected_cell_bg),
 		BackgroundColor: colors.cell_bg,
 	}
 
@@ -44,7 +44,7 @@ func FillTable(table *tview.Table, hosts []host_info, colors theme) {
 			current.Clicked = func() bool {
 				selected_row, _ := table.GetSelection()
 				// row - 1 since the first row is used for column names
-				if iter == selected_row - 1 {
+				if iter == selected_row-1 {
 					if hosts[iter].Name == "Exit/Quit" {
 						app.Stop()
 						return false
@@ -56,7 +56,7 @@ func FillTable(table *tview.Table, hosts []host_info, colors theme) {
 				}
 				return false
 			}
-			table.SetCell(iter + 1, i, &current)
+			table.SetCell(iter+1, i, &current)
 		}
 	}
 
@@ -80,18 +80,17 @@ func FillTable(table *tview.Table, hosts []host_info, colors theme) {
 func Start(a *tview.Application) {
 	app = a
 	colors := GetColorTheme()
-
 	table := tview.NewTable().SetFixed(1, 1).SetSelectable(true, false)
 	table.SetBackgroundColor(colors.app_bg)
 	hosts := getHosts()
 	// Add extra option to exit/quit the app
 	hosts = append(hosts, host_info{Name: "Exit/Quit"})
 	FillTable(table, hosts, colors)
-	filteredHosts := hosts;
-	
+	filteredHosts := hosts
+
 	input := tview.NewInputField().SetChangedFunc(func(text string) {
 		// On input field changed
-		filteredHosts = []host_info{};
+		filteredHosts = []host_info{}
 		for _, host := range hosts {
 			if strings.Contains(strings.ToLower(host.Name), strings.ToLower(text)) {
 				filteredHosts = append(filteredHosts, host)
@@ -109,27 +108,31 @@ func Start(a *tview.Application) {
 		selected_row, _ := table.GetSelection()
 		length := table.GetRowCount()
 		switch event.Key() {
-			case tcell.KeyDown:
-				table.Select((selected_row + 1 + length) % length, 0)
-				return nil;
-			case tcell.KeyUp:
-				table.Select((selected_row - 1 + length) % length, 0)
-				return nil;
-			case tcell.KeyEnter:
-				// Skip if no row is selected
-				if selected_row > len(filteredHosts) || selected_row < 0 {
-					return nil;
-				}
-				app.Suspend(func() {
-					// Exit is a extra row after the list of hosts
-					if filteredHosts[selected_row - 1].Name == "Exit/Quit" {
-						app.Stop()
-						return;
-					}
-					// row - 1 since the first row is used for column names
-					connect(filteredHosts[selected_row - 1])
-				})
+		case tcell.KeyDown:
+			table.Select((selected_row+1+length)%length, 0)
+			return nil
+		case tcell.KeyUp:
+			if selected_row == 1 {
+				table.Select(length-1, 0)
+			} else {
+				table.Select((selected_row-1+length)%length, 0)
 			}
+			return nil
+		case tcell.KeyEnter:
+			// Skip if no row is selected
+			if selected_row > len(filteredHosts) || selected_row < 0 {
+				return nil
+			}
+			app.Suspend(func() {
+				// Exit is a extra row after the list of hosts
+				if filteredHosts[selected_row-1].Name == "Exit/Quit" {
+					app.Stop()
+					return
+				}
+				// row - 1 since the first row is used for column names
+				connect(filteredHosts[selected_row-1])
+			})
+		}
 		app.SetFocus(input)
 		return event
 	})
@@ -137,18 +140,23 @@ func Start(a *tview.Application) {
 		selected_row, _ := table.GetSelection()
 		length := table.GetRowCount()
 		switch action {
-			case tview.MouseScrollDown:
-				table.Select((selected_row + 1 + length) % length, 0)
-			case tview.MouseScrollUp:
-				table.Select((selected_row - 1 + length) % length, 0)
+		case tview.MouseScrollDown:
+			table.Select((selected_row+1+length)%length, 0)
+		case tview.MouseScrollUp:
+			if selected_row == 1 {
+				table.Select(length-1, 0)
+			} else {
+				table.Select((selected_row-1+length)%length, 0)
+			}
 		}
 		app.SetFocus(input)
 		return event, action
 	})
-	
+
 	flex := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(input, 1, 0, true).
 		AddItem(table, 0, 1, false)
+
 	if err := app.SetRoot(flex, true).Run(); err != nil {
 		panic(err)
 	}
